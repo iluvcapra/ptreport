@@ -2,9 +2,12 @@
 main
 """
 from itertools import chain
+from os import makedev
 import re
+from typing import cast
 
-from ptulsconv.docparser import parse_document
+from ptulsconv.docparser import parse_document 
+from ptulsconv.docparser.doc_entity import MarkerDescriptor
 from ptsl import open_engine
 
 from sys import stdout
@@ -26,10 +29,13 @@ def main():
 
         stdout.write(f".TI {document.header.session_name}\n")
         # stdout.write(f".TL {document.header.session_name}\n")
+        stdout.write(".fam H\n")
         stdout.write(f".nr PD 1v\n")
-        stdout.write(f".nr PI 10n\n")
+        stdout.write(f".nr PI 5n\n")
+        # stdout.write(f".nr PSINCR 2p\n")
+        # stdout.write(f".nr GROWPS 8p\n")
         stdout.write(".ta 10n\n")
-        stdout.write(f".SH 1\n{document.header.session_name}\n")
+        stdout.write(f".SH 1\n.LG\n{document.header.session_name}\n.NL\n")
 
         sorted_clips = sorted(document.track_clips_timed(),
                               key=lambda x: x[2])
@@ -49,11 +55,11 @@ def main():
                                key= lambda x: x[1])
 
         for kind, _, event in sorted_events:
-            stdout.write(".XP\n")
             if kind == 'Clip':
                 track = event[0]
                 clip = event[1]
-                stdout.write(f".B \"{clip.start_timecode} \\[->] "
+                stdout.write(".XP\n")
+                stdout.write(f".I \"{clip.start_timecode} \\[->] "
                              f"{clip.finish_timecode}\"\n")
                 stdout.write(".br\n")
                 m = re.match("^\\[(.+)\\]",track.name)
@@ -64,10 +70,26 @@ def main():
                 stdout.write(f"{clip.clip_name}.\n")
             elif kind == 'Marker':
                 marker = event[0]
-                stdout.write(f".B \"{marker.location} \\[DI]\"\n")
-                stdout.write(".br\n")
-                stdout.write(f"{marker.name}.\n")               
+                marker = cast(MarkerDescriptor, marker)
+                if marker.name.startswith("-"):
+                    pass 
+                elif marker.name.startswith("SH"):
+                    m = re.match("SH (\\d+) (.*)", marker.name)
+                    if m:
+                        stdout.write(".nr VS +8\n")
+                        stdout.write(f".SH {m[1]}\n")
+                        stdout.write(f"{m[2]}\n")
+                        stdout.write(".nr VS -8\n")
+                else:
+                    stdout.write(".XP\n")
+                    stdout.write(f".B \"{marker.location} \\[DI]\"\n")
+                    stdout.write(".br\n")
+                    stdout.write(f"{marker.name}\n")
 
+                if len(marker.comments) > 0:
+                    stdout.write(".QS\n")
+                    stdout.write(f"{marker.comments}\n")
+                    stdout.write(".QE\n")
 
 if __name__ == "__main__":
     main()
