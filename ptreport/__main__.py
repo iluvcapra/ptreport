@@ -2,6 +2,7 @@
 main
 """
 from itertools import chain
+import re
 
 from ptulsconv.docparser import parse_document
 from ptsl import open_engine
@@ -55,6 +56,11 @@ def main():
                 stdout.write(f".B \"{clip.start_timecode} \\[->] "
                              f"{clip.finish_timecode}\"\n")
                 stdout.write(".br\n")
+                m = re.match("^\\[(.+)\\]",track.name)
+                if m:
+                    rubric = m[1] 
+                    stdout.write(f".B \"{rubric}\" \":\"\n")
+                
                 stdout.write(f"{clip.clip_name}.\n")
             elif kind == 'Marker':
                 marker = event[0]
