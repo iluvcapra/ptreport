@@ -59,7 +59,7 @@ def main():
                 m = re.match("^\\[(.+)\\]",track.name)
                 if m:
                     rubric = m[1] 
-                    stdout.write(f".B \"{rubric}\" \":\"\n")
+                    stdout.write(f".B \"{rubric}:\"\n")
                 
                 stdout.write(f"{clip.clip_name}.\n")
             elif kind == 'Marker':
