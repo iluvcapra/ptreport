@@ -1,0 +1,50 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "ptreport"
+authors = [
+    {name = "Jamie Hardt", email = "jamiehardt@me.com"},
+]
+readme = "README.md"
+# license = { file = "LICENSE" }
+classifiers = [
+    'License :: OSI Approved :: MIT License',
+    'Topic :: Multimedia',
+    'Topic :: Multimedia :: Sound/Audio',
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    # "Development Status :: 5 - Production/Stable",
+    "Topic :: Text Processing :: Filters"
+]
+requires-python = ">=3.8"
+dynamic = ["version", "description"]
+keywords = ["text-processing", "parsers", "film", 
+    "broadcast", "editing", "editorial"]
+dependencies = [
+  'py-ptsl ~= 101.1.0',
+  'ptulsconv ~= 2.0.1'
+  ]
+
+[project.optional-dependencies]
+doc = [
+    "Sphinx ~= 5.3.0",
+    "sphinx-rtd-theme >= 1.1.1"
+]
+
+[tool.flit.module]
+name = "ptreport"
+
+[project.scripts]
+ptulsconv = "ptreport.__main__:main"
+
+[project.entry_points.console_scripts]
+ptulsconv = 'ptreport.__main__:main'
+
+[project.urls]
+# Source = 'https://github.com/iluvcapra/ptulsconv'
+# Issues = 'https://github.com/iluvcapra/ptulsconv/issues'
+# Documentation = 'https://ptulsconv.readthedocs.io/'
