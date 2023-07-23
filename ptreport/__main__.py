@@ -1,16 +1,17 @@
 """
 main
 """
-from itertools import chain
-from os import makedev
 import re
-from typing import cast
+from typing import cast, List, Tuple
+from fractions import Fraction
 
 from ptulsconv.docparser import parse_document
-from ptulsconv.docparser.doc_entity import MarkerDescriptor
+from ptulsconv.docparser.doc_entity import MarkerDescriptor, TrackDescriptor, \
+    ClipDescriptor, SessionDescriptor
 from ptsl import open_engine
 
 from sys import stdout
+import sys
 
 
 def fetch_session_data():
@@ -28,7 +29,11 @@ def fetch_session_data():
         return parse_document(session_data)
 
 
-def sorted_document_events(document):
+def sorted_document_events(document: SessionDescriptor) -> List[
+        Tuple[str, Fraction, Tuple[
+        TrackDescriptor, ClipDescriptor
+        ] | MarkerDescriptor]]:
+
     sorted_clips = sorted(document.track_clips_timed(),
                           key=lambda x: x[2])
 
@@ -47,58 +52,68 @@ def sorted_document_events(document):
                   key=lambda x: x[1])
 
 
-def main():
+def emit_groff_header(session_name, output_stream=sys.stdout):
+    output_stream.write(f".TI {session_name}\n")
+    output_stream.write(".fam H\n")
+    output_stream.write(f".nr PD 1v\n")
+    output_stream.write(f".nr PI 5n\n")
+    output_stream.write(".ta 10n\n")
+    output_stream.write(f".SH 1\n.LG\n{session_name}\n.NL\n")
 
+
+def emit_clip_entry(track: TrackDescriptor, clip: ClipDescriptor,
+                    output_stream=sys.stdout):
+    output_stream.write(".XP\n")
+    output_stream.write(f".I \"{clip.start_timecode} \\[->] "
+                        f"{clip.finish_timecode}\"\n")
+    output_stream.write(".br\n")
+    m = re.match("^\\[(.+)\\]", track.name)
+    if m:
+        rubric = m[1]
+        output_stream.write(f".B \"{rubric}:\"\n")
+
+    output_stream.write(f"{clip.clip_name}.\n")
+
+
+def emit_marker_entry(marker: MarkerDescriptor, output_stream=sys.stdout):
+    if marker.name.startswith("-"):
+        pass
+    elif marker.name.startswith("SH"):
+        m = re.match("SH (\\d+) (.*)", marker.name)
+        if m:
+            output_stream.write(".nr VS +8\n")
+            output_stream.write(f".SH {m[1]}\n")
+            output_stream.write(f"{m[2]}\n")
+            output_stream.write(".nr VS -8\n")
+    else:
+        output_stream.write(".XP\n")
+        output_stream.write(f".B \"{marker.location} \\[DI]\"\n")
+        output_stream.write(".br\n")
+        output_stream.write(f"{marker.name}\n")
+
+    if len(marker.comments) > 0:
+        output_stream.write(".QS\n")
+        output_stream.write(f"{marker.comments}\n")
+        output_stream.write(".QE\n")
+
+
+def main():
     document = fetch_session_data()
 
-    stdout.write(f".TI {document.header.session_name}\n")
-    # stdout.write(f".TL {document.header.session_name}\n")
-    stdout.write(".fam H\n")
-    stdout.write(f".nr PD 1v\n")
-    stdout.write(f".nr PI 5n\n")
-    # stdout.write(f".nr PSINCR 2p\n")
-    # stdout.write(f".nr GROWPS 8p\n")
-    stdout.write(".ta 10n\n")
-    stdout.write(f".SH 1\n.LG\n{document.header.session_name}\n.NL\n")
+    emit_groff_header(document.header.session_name)
 
     sorted_events = sorted_document_events(document)
 
     for kind, _, event in sorted_events:
         if kind == 'Clip':
-            track = event[0]
-            clip = event[1]
-            stdout.write(".XP\n")
-            stdout.write(f".I \"{clip.start_timecode} \\[->] "
-                         f"{clip.finish_timecode}\"\n")
-            stdout.write(".br\n")
-            m = re.match("^\\[(.+)\\]", track.name)
-            if m:
-                rubric = m[1]
-                stdout.write(f".B \"{rubric}:\"\n")
-
-            stdout.write(f"{clip.clip_name}.\n")
+            event = cast(Tuple[TrackDescriptor, ClipDescriptor], event)
+            track = cast(TrackDescriptor, event[0])
+            clip = cast(ClipDescriptor, event[1])
+            emit_clip_entry(track, clip)
         elif kind == 'Marker':
+            event = cast(Tuple[MarkerDescriptor, Fraction], event)
             marker = event[0]
-            marker = cast(MarkerDescriptor, marker)
-            if marker.name.startswith("-"):
-                pass
-            elif marker.name.startswith("SH"):
-                m = re.match("SH (\\d+) (.*)", marker.name)
-                if m:
-                    stdout.write(".nr VS +8\n")
-                    stdout.write(f".SH {m[1]}\n")
-                    stdout.write(f"{m[2]}\n")
-                    stdout.write(".nr VS -8\n")
-            else:
-                stdout.write(".XP\n")
-                stdout.write(f".B \"{marker.location} \\[DI]\"\n")
-                stdout.write(".br\n")
-                stdout.write(f"{marker.name}\n")
-
-            if len(marker.comments) > 0:
-                stdout.write(".QS\n")
-                stdout.write(f"{marker.comments}\n")
-                stdout.write(".QE\n")
+            emit_marker_entry(marker)
 
 
 if __name__ == "__main__":
