@@ -62,18 +62,18 @@ def emit_groff_header(session_name, output_stream=sys.stdout):
 
 
 def emit_text_line(text: str, output_stream=sys.stdout):
-        output_stream.write(text + "\n")
+    output_stream.write(text + "\n")
 
 
 def emit_clip_entry(track: TrackDescriptor, clip: ClipDescriptor,
                     output_stream=sys.stdout):
-    
+
     clip_name = clip.clip_name
 
     if clip_name.startswith("-"):
         # Skip case, clip will not have an effect on the output.
         emit_text_line(".\\\" OMIITED CLIP: " + clip_name[1:])
-    
+
     elif clip_name.startswith("!"):
         # Literal case, clip text will be inserted literally into the document
         emit_text_line(clip_name[1:], output_stream)
@@ -83,7 +83,7 @@ def emit_clip_entry(track: TrackDescriptor, clip: ClipDescriptor,
         output_stream.write(".QS\n")
         emit_text_line(clip_name[1:], output_stream)
         output_stream.write(".QE\n")
-    
+
     else:
         output_stream.write(".XP\n")
         output_stream.write(f".I \"{clip.start_timecode} \\[->] "
@@ -121,11 +121,12 @@ def emit_marker_entry(marker: MarkerDescriptor, output_stream=sys.stdout):
     #     output_stream.write(".QE\n")
     #
 
+
 def main():
     document = fetch_session_data()
 
-    emit_groff_header(document.header.session_name) 
- 
+    emit_groff_header(document.header.session_name)
+
     sorted_events = sorted_document_events(document)
 
     for kind, _, event in sorted_events:
