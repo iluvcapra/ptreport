@@ -31,6 +31,20 @@ def fetch_session_data():
 
 def emit_groff_header(session_name, output_stream=sys.stdout):
     output_stream.write(f".TI {session_name}\n")
+    output_stream.write(""".de ei
+.XP
+.I "\\\\$1"
+.br 
+\\\\$2
+..
+""")
+    output_stream.write(""".de eio 
+.XP
+.I "\\\\$1 \\\\[->] \\\\$2"
+.br 
+\\\\$3
+..
+""")
     output_stream.write(".fam H\n")
     output_stream.write(f".nr PD 1v\n")
     output_stream.write(f".nr PI 5n\n")
@@ -54,9 +68,9 @@ def emit_clip_entry(track: TrackDescriptor,
 
     clip_name = clip.clip_name
     substitutions = {
-        '@start': clip.start_timecode,
-        '@finish': clip.finish_timecode,
-        '@track_name': track.name,
+        '$start': clip.start_timecode,
+        '$finish': clip.finish_timecode,
+        '$track_name': track.name,
     }
     if clip_name.startswith("-"):
         # Skip case, clip will not have an effect on the output.
@@ -78,17 +92,12 @@ def emit_clip_entry(track: TrackDescriptor,
 
     elif clip_name.startswith("/"):
         # Insert a formatted element with the clip's start and end time
-        output_stream.write(".XP\n")
-        output_stream.write(f".I \"{clip.start_timecode} \\[->] "
-                            f"{clip.finish_timecode}\"\n")
-        output_stream.write(".br\n")
-        output_stream.write(f"{clip_name[1:]}\n")
+        output_stream.write(f".eio \"{clip.start_timecode}\" "
+            f"\"{clip.finish_timecode}\" \"{clip.clip_name[1:]}\"")
+
     else:
         # By default, insert a formatted element with the clip's start time
-        output_stream.write(".XP\n")
-        output_stream.write(f".I \"{clip.start_timecode}\"\n")
-        output_stream.write(".br\n")
-        output_stream.write(f"{clip_name}\n")
+        output_stream.write(f".ei \"{clip.start_timecode}\" \"{clip_name}\" \n" )
 
 
 def main():
