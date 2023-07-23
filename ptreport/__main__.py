@@ -58,7 +58,7 @@ def emit_text_line(text: str,
     for k in substitutions.keys():
         text = text.replace(k, substitutions[k])
 
-    output_stream.write(text + "\n")
+    output_stream.write(text.strip(" ") + "\n")
 
 
 def emit_clip_entry(track: TrackDescriptor,
