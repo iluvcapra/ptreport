@@ -58,50 +58,74 @@ def emit_groff_header(session_name, output_stream=sys.stdout):
     output_stream.write(f".nr PD 1v\n")
     output_stream.write(f".nr PI 5n\n")
     output_stream.write(".ta 10n\n")
-    output_stream.write(f".SH 1\n.LG\n{session_name}\n.NL\n")
+    output_stream.write(f".SH 1\n.LG\n.LG\n{session_name}\n.NL\n")
+
+
+def emit_text_line(text: str, output_stream=sys.stdout):
+        output_stream.write(text + "\n")
 
 
 def emit_clip_entry(track: TrackDescriptor, clip: ClipDescriptor,
                     output_stream=sys.stdout):
-    output_stream.write(".XP\n")
-    output_stream.write(f".I \"{clip.start_timecode} \\[->] "
-                        f"{clip.finish_timecode}\"\n")
-    output_stream.write(".br\n")
-    m = re.match("^\\[(.+)\\]", track.name)
-    if m:
-        rubric = m[1]
-        output_stream.write(f".B \"{rubric}:\"\n")
+    
+    clip_name = clip.clip_name
 
-    output_stream.write(f"{clip.clip_name}.\n")
+    if clip_name.startswith("-"):
+        # Skip case, clip will not have an effect on the output.
+        emit_text_line(".\\\" OMIITED CLIP: " + clip_name[1:])
+    
+    elif clip_name.startswith("!"):
+        # Literal case, clip text will be inserted literally into the document
+        emit_text_line(clip_name[1:], output_stream)
+
+    elif clip_name.startswith(">"):
+        # Insert the clip's text as a blockquote
+        output_stream.write(".QS\n")
+        emit_text_line(clip_name[1:], output_stream)
+        output_stream.write(".QE\n")
+    
+    else:
+        output_stream.write(".XP\n")
+        output_stream.write(f".I \"{clip.start_timecode} \\[->] "
+                            f"{clip.finish_timecode}\"\n")
+        output_stream.write(".br\n")
+        m = re.match("^\\[(.+)\\]", track.name)
+        if m:
+            rubric = m[1]
+            output_stream.write(f".B \"{rubric}:\"\n")
+
+        output_stream.write(f"{clip_name}\n")
 
 
 def emit_marker_entry(marker: MarkerDescriptor, output_stream=sys.stdout):
-    if marker.name.startswith("-"):
-        pass
-    elif marker.name.startswith("SH"):
-        m = re.match("SH (\\d+) (.*)", marker.name)
-        if m:
-            output_stream.write(".nr VS +8\n")
-            output_stream.write(f".SH {m[1]}\n")
-            output_stream.write(f"{m[2]}\n")
-            output_stream.write(".nr VS -8\n")
-    else:
-        output_stream.write(".XP\n")
-        output_stream.write(f".B \"{marker.location} \\[DI]\"\n")
-        output_stream.write(".br\n")
-        output_stream.write(f"{marker.name}\n")
-
-    if len(marker.comments) > 0:
-        output_stream.write(".QS\n")
-        output_stream.write(f"{marker.comments}\n")
-        output_stream.write(".QE\n")
-
+    pass
+    # if marker.name.startswith("-"):
+    #     pass
+    #
+    # elif marker.name.startswith("SH"):
+    #     m = re.match("SH (\\d+) (.*)", marker.name)
+    #     if m:
+    #         output_stream.write(".nr VS +8\n")
+    #         output_stream.write(f".SH {m[1]}\n")
+    #         output_stream.write(f"{m[2]}\n")
+    #         output_stream.write(".nr VS -8\n")
+    # else:
+    #     output_stream.write(".XP\n")
+    #     output_stream.write(f".B \"{marker.location} \\[DI]\"\n")
+    #     output_stream.write(".br\n")
+    #     output_stream.write(f"{marker.name}\n")
+    #
+    # if len(marker.comments) > 0:
+    #     output_stream.write(".QS\n")
+    #     output_stream.write(f"{marker.comments}\n")
+    #     output_stream.write(".QE\n")
+    #
 
 def main():
     document = fetch_session_data()
 
-    emit_groff_header(document.header.session_name)
-
+    emit_groff_header(document.header.session_name) 
+ 
     sorted_events = sorted_document_events(document)
 
     for kind, _, event in sorted_events:
