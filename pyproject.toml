@@ -45,6 +45,7 @@ ptulsconv = "ptreport.__main__:main"
 ptulsconv = 'ptreport.__main__:main'
 
 [project.urls]
-# Source = 'https://github.com/iluvcapra/ptulsconv'
-# Issues = 'https://github.com/iluvcapra/ptulsconv/issues'
-# Documentation = 'https://ptulsconv.readthedocs.io/'
+Source = 'https://github.com/iluvcapra/ptreport'
+Issues = 'https://github.com/iluvcapra/ptreport/issues'
+# Documentation = ''
+
