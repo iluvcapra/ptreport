@@ -1,4 +1,20 @@
-ptreport
-========
+# ptreport
 
-Generate reports from Pro Tools
+`ptreport` is a tool that generates reports in the groff typesetting language 
+from [Pro Tools][pt] sessions, for example to create spotting lists or reports. 
+`ptreport` uses [PTSL][ptsl] to connect directly to Pro Tools, without the 
+need to export text from the session and allowing for enhanced data import.
+
+[pt]: https://www.avid.com/pro-tools
+[ptsl]: https://github.com/iluvcapra/py-ptsl
+
+## How to Use 
+
+Installing `ptreport` with `pip` will install a command-line tool that can be
+invoked directly from a terminal. The tool will connect to Pro Tools with PTSL
+and emit `groff(1)` commands to the standard output. These can be immediately 
+piped to `groff(1)` for rendering to a device. 
+
+```sh  
+$ ptreport | groff -ms -Tpdf > output.pdf
+```

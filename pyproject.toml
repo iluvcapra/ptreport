@@ -39,10 +39,10 @@ doc = [
 name = "ptreport"
 
 [project.scripts]
-ptulsconv = "ptreport.__main__:main"
+ptreport = "ptreport.__main__:main"
 
 [project.entry_points.console_scripts]
-ptulsconv = 'ptreport.__main__:main'
+ptreport = 'ptreport.__main__:main'
 
 [project.urls]
 Source = 'https://github.com/iluvcapra/ptreport'
