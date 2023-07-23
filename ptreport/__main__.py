@@ -45,11 +45,10 @@ def emit_groff_header(session_name, output_stream=sys.stdout):
 \\\\$3
 ..
 """)
-    output_stream.write(".fam H\n")
     output_stream.write(f".nr PD 1v\n")
     output_stream.write(f".nr PI 5n\n")
     output_stream.write(".ta 10n\n")
-    output_stream.write(f".SH 1\n.LG\n.LG\n{session_name}\n.NL\n")
+    # output_stream.write(f".SH 1\n.LG\n.LG\n{session_name}\n.NL\n")
 
 
 def emit_text_line(text: str,
