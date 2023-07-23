@@ -2,15 +2,15 @@
 main
 """
 import re
-from typing import cast, List, Tuple
-from fractions import Fraction
+from typing import Dict
+# from fractions import Fraction
 
 from ptulsconv.docparser import parse_document
 from ptulsconv.docparser.doc_entity import MarkerDescriptor, TrackDescriptor, \
-    ClipDescriptor, SessionDescriptor
+    TrackClipDescriptor, SessionDescriptor
 from ptsl import open_engine
 
-from sys import stdout
+# from sys import stdout
 import sys
 
 
@@ -29,29 +29,6 @@ def fetch_session_data():
         return parse_document(session_data)
 
 
-def sorted_document_events(document: SessionDescriptor) -> List[
-        Tuple[str, Fraction, Tuple[
-        TrackDescriptor, ClipDescriptor
-        ] | MarkerDescriptor]]:
-
-    sorted_clips = sorted(document.track_clips_timed(),
-                          key=lambda x: x[2])
-
-    sorted_clips_keyed = map(lambda x: ("Clip", x[2], x),
-                             sorted_clips)
-
-    sorted_markers = sorted(document.markers_timed(),
-                            key=lambda x: x[1])
-
-    sorted_markers_keyed = map(lambda x: ("Marker",
-                                          x[1] + document.header.start_time,
-                                          x),
-                               sorted_markers)
-
-    return sorted(list(sorted_clips_keyed) + list(sorted_markers_keyed),
-                  key=lambda x: x[1])
-
-
 def emit_groff_header(session_name, output_stream=sys.stdout):
     output_stream.write(f".TI {session_name}\n")
     output_stream.write(".fam H\n")
@@ -61,65 +38,57 @@ def emit_groff_header(session_name, output_stream=sys.stdout):
     output_stream.write(f".SH 1\n.LG\n.LG\n{session_name}\n.NL\n")
 
 
-def emit_text_line(text: str, output_stream=sys.stdout):
+def emit_text_line(text: str,
+                   substitutions: Dict[str, str] = {},
+                   output_stream=sys.stdout):
+
+    for k in substitutions.keys():
+        text = text.replace(k, substitutions[k])
+
     output_stream.write(text + "\n")
 
 
-def emit_clip_entry(track: TrackDescriptor, clip: ClipDescriptor,
+def emit_clip_entry(track: TrackDescriptor,
+                    clip: TrackClipDescriptor,
                     output_stream=sys.stdout):
 
     clip_name = clip.clip_name
-
+    substitutions = {
+        '@start': clip.start_timecode,
+        '@finish': clip.finish_timecode,
+        '@track_name': track.name,
+    }
     if clip_name.startswith("-"):
         # Skip case, clip will not have an effect on the output.
-        emit_text_line(".\\\" OMIITED CLIP: " + clip_name[1:])
+        emit_text_line(".\\\" OMIITED CLIP: " + clip_name[1:],
+                       substitutions)
 
     elif clip_name.startswith("!"):
         # Literal case, clip text will be inserted literally into the document
-        emit_text_line(clip_name[1:], output_stream)
+        emit_text_line(clip_name[1:], substitutions,
+                       output_stream=output_stream)
 
     elif clip_name.startswith(">"):
         # Insert the clip's text as a blockquote
         output_stream.write(".QS\n")
-        emit_text_line(clip_name[1:], output_stream)
+        emit_text_line(clip_name[1:],
+                       substitutions,
+                       output_stream=output_stream)
         output_stream.write(".QE\n")
 
-    else:
+    elif clip_name.startswith("/"):
+        # Insert a formatted element with the clip's start and end time
         output_stream.write(".XP\n")
         output_stream.write(f".I \"{clip.start_timecode} \\[->] "
                             f"{clip.finish_timecode}\"\n")
         output_stream.write(".br\n")
-        m = re.match("^\\[(.+)\\]", track.name)
-        if m:
-            rubric = m[1]
-            output_stream.write(f".B \"{rubric}:\"\n")
-
+        output_stream.write(f"{clip_name[1:]}\n")
+    else:
+        # By default, insert a formatted element with the clip's start time
+        output_stream.write(".XP\n")
+        output_stream.write(f".I \"{clip.start_timecode}\"\n")
+        output_stream.write(".br\n")
         output_stream.write(f"{clip_name}\n")
-
-
-def emit_marker_entry(marker: MarkerDescriptor, output_stream=sys.stdout):
-    pass
-    # if marker.name.startswith("-"):
-    #     pass
-    #
-    # elif marker.name.startswith("SH"):
-    #     m = re.match("SH (\\d+) (.*)", marker.name)
-    #     if m:
-    #         output_stream.write(".nr VS +8\n")
-    #         output_stream.write(f".SH {m[1]}\n")
-    #         output_stream.write(f"{m[2]}\n")
-    #         output_stream.write(".nr VS -8\n")
-    # else:
-    #     output_stream.write(".XP\n")
-    #     output_stream.write(f".B \"{marker.location} \\[DI]\"\n")
-    #     output_stream.write(".br\n")
-    #     output_stream.write(f"{marker.name}\n")
-    #
-    # if len(marker.comments) > 0:
-    #     output_stream.write(".QS\n")
-    #     output_stream.write(f"{marker.comments}\n")
-    #     output_stream.write(".QE\n")
-    #
 
 
 def main():
@@ -127,18 +96,8 @@ def main():
 
     emit_groff_header(document.header.session_name)
 
-    sorted_events = sorted_document_events(document)
-
-    for kind, _, event in sorted_events:
-        if kind == 'Clip':
-            event = cast(Tuple[TrackDescriptor, ClipDescriptor], event)
-            track = cast(TrackDescriptor, event[0])
-            clip = cast(ClipDescriptor, event[1])
-            emit_clip_entry(track, clip)
-        elif kind == 'Marker':
-            event = cast(Tuple[MarkerDescriptor, Fraction], event)
-            marker = event[0]
-            emit_marker_entry(marker)
+    for track, track_clip, _, _, _ in document.track_clips_timed():
+        emit_clip_entry(track, track_clip)
 
 
 if __name__ == "__main__":
