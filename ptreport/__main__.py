@@ -33,14 +33,14 @@ def emit_groff_header(session_name, output_stream=sys.stdout):
     output_stream.write(f".TI {session_name}\n")
     output_stream.write(""".de ei
 .XP
-.I "\\\\$1"
+.UL "\\\\$1"
 .br 
 \\\\$2
 ..
 """)
     output_stream.write(""".de eio 
 .XP
-.I "\\\\$1 \\\\[->] \\\\$2"
+.UL "\\\\$1 \\\\[->] \\\\$2"
 .br 
 \\\\$3
 ..
