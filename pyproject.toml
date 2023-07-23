@@ -27,7 +27,10 @@ keywords = ["text-processing", "parsers", "film",
 dependencies = [
   'py-ptsl ~= 101.1.0',
   'ptulsconv ~= 2.0.1'
-  ]
+]
+
+[tool.flit.external-data]
+directory = "data"
 
 [project.optional-dependencies]
 doc = [
