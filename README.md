@@ -18,3 +18,7 @@ piped to `groff(1)` for rendering to a device.
 ```sh  
 $ ptreport | groff -ms -Tpdf > output.pdf
 ```
+
+At this time, the markup emitted by `ptreport` uses the `groff_ms(7)` macro
+package.
+
