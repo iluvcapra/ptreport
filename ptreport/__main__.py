@@ -93,7 +93,8 @@ def emit_clip_entry(track: TrackDescriptor,
     elif clip_name.startswith("/"):
         # Insert a formatted element with the clip's start and end time
         output_stream.write(f".eio \"{clip.start_timecode}\" "
-                            f"\"{clip.finish_timecode}\" \"{clip.clip_name[1:]}\"")
+                            f"\"{clip.finish_timecode}\" "
+                            f"\"{clip.clip_name[1:]}\"")
 
     else:
         # By default, insert a formatted element with the clip's start time
