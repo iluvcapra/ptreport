@@ -16,11 +16,12 @@ and emit `groff(1)` commands to the standard output. These can be immediately
 piped to `groff(1)` for rendering to a device. 
 
 ```sh  
-$ ptreport | groff -ms -Tpdf > output.pdf
+$ ptreport | groff -k -ms -Tpdf > output.pdf
 ```
 
 At this time, the markup emitted by `ptreport` uses the [`groff_ms(7)`][ms] 
-macro package.
+macro package. Pro Tools clip and track names are read as Unicode, thus the 
+`-k` flag should be used.
 
 For more information consult `man ptreport`.
 
