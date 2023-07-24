@@ -3,7 +3,7 @@
 ptreport \- Pro Tools report generator
 .SH SYNOPSIS
 .SY ptreport
-.\" .RI "[" "SOUND-FILE ..." "]"
+.I "[options]"
 .SH DESCRIPTION
 .B ptreport
 is a report generator for Pro Tools. It communicates with Pro Tools with PTSL,
@@ -12,7 +12,17 @@ typesetting commands in the
 .BR groff "(1)"
 language.
 .SH OPTIONS
-.I "ptreport supports no command-line options at this time."
+.IP "\-h, \-\-help"
+Print the help message and exit
+.SS TIMECODE FORMATS
+.IP "\-\-timecode"
+Print clip start and finish as timecodes (this is the default)
+.IP "\-\-feet\-frames"
+Print clip start and finish in feet+frames format
+.IP "\-\-min\-secs"
+Print clip start and finish in mins:secs format
+.IP "\-\-bars\-beats"
+Print clip start and finish in bars+beats format
 .SH DETAILED DESCRIPTION
 .I To be written
 .SS MOTIVATION
@@ -23,7 +33,9 @@ language.
 .I To be written
 .SH EXIT STATUS
 .IP 0
-On user quit.
+Success.
+.IP 2 
+Pro Tools gRPC connection could not be established.
 .SH AUTHOR
 Jamie Hardt <https://github.com/iluvcapra>
 .SH BUGS

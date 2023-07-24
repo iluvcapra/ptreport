@@ -1,9 +1,12 @@
 """
 main
 """
-import re
 from typing import Dict
-# from fractions import Fraction
+import sys
+import optparse
+
+from grpc.aio import UsageError
+from grpc import StatusCode
 
 from ptulsconv.docparser import parse_document
 from ptulsconv.docparser.doc_entity import MarkerDescriptor, TrackDescriptor, \
@@ -11,10 +14,9 @@ from ptulsconv.docparser.doc_entity import MarkerDescriptor, TrackDescriptor, \
 from ptsl import open_engine
 
 # from sys import stdout
-import sys
 
 
-def fetch_session_data():
+def fetch_session_data(tc_format: str = "tc"):
     with open_engine(company_name="ptreport developers",
                      application_name="ptreport") as engine:
 
@@ -23,7 +25,7 @@ def fetch_session_data():
         builder.include_track_edls()
         builder.selected_tracks_only()
         builder.dont_show_crossfades()
-        builder.time_type("tc")
+        builder.time_type(tc_format)
 
         session_data = builder.export_string()
         return parse_document(session_data)
@@ -101,8 +103,8 @@ def emit_clip_entry(track: TrackDescriptor,
                             f"\"{clip_name}\" \n")
 
 
-def main():
-    document = fetch_session_data()
+def main(tc_format: str = "tc"):
+    document = fetch_session_data(tc_format=tc_format)
 
     emit_groff_header(document.header.session_name)
 
@@ -111,4 +113,33 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+
+    opts = optparse.OptionParser()
+    opts.set_defaults(tc_format='tc')
+
+    formats_group = optparse.OptionGroup(opts, title="Output Time Formats")
+    formats_group.add_option("--timecode", dest='tc_format',
+                             help="Print clip start and finish as "
+                             "timecodes (this is the default)",
+                             action='store_const', const='tc')
+    formats_group.add_option("--feet-frames", dest="tc_format",
+                             help="Print clip start and finish in feet+frames"
+                             " format",
+                             action='store_const', const='feet+frames')
+    formats_group.add_option("--min-secs", dest="tc_format",
+                             help="Print clip start and finish in mins:secs "
+                             "format",
+                             action='store_const', const='min:sec')
+    formats_group.add_option("--bars-beats", dest="tc_format",
+                             help="Print clip start and finish in bars+beats "
+                             "format",
+                             action='store_const', const='bars+beats')
+
+    opts.add_option_group(formats_group)
+
+    (options, args) = opts.parse_args()
+
+    try:
+        main(tc_format=options.tc_format)
+    except UsageError as e:
+        sys.exit(2)
