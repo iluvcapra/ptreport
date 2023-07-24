@@ -22,4 +22,6 @@ $ ptreport | groff -ms -Tpdf > output.pdf
 At this time, the markup emitted by `ptreport` uses the [`groff_ms(7)`][ms] 
 macro package.
 
+For more information consult `man ptreport`.
+
 [ms]: https://man7.org/linux/man-pages/man7/groff_ms.7.html
