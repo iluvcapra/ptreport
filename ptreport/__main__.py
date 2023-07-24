@@ -4,12 +4,13 @@ main
 from typing import Dict
 import sys
 import optparse
+import re
 
 from grpc.aio import UsageError
 from grpc import StatusCode
 
 from ptulsconv.docparser import parse_document
-from ptulsconv.docparser.doc_entity import MarkerDescriptor, TrackDescriptor, \
+from ptulsconv.docparser.doc_entity import HeaderDescriptor, MarkerDescriptor, TrackDescriptor, \
     TrackClipDescriptor, SessionDescriptor
 from ptsl import open_engine
 
@@ -63,20 +64,38 @@ def emit_text_line(text: str,
     output_stream.write(text.strip(" ") + "\n")
 
 
-def emit_clip_entry(track: TrackDescriptor,
+def emit_clip_entry(session: HeaderDescriptor,
+                    track: TrackDescriptor,
                     clip: TrackClipDescriptor,
                     output_stream=sys.stdout):
 
     clip_name = clip.clip_name
     substitutions = {
-        '$start': clip.start_timecode,
-        '$finish': clip.finish_timecode,
-        '$track_name': track.name,
+        '$session': session.session_name,
+        '$i': clip.start_timecode,
+        '$o': clip.finish_timecode,
+        '$track': track.name,
     }
     if clip_name.startswith("-"):
         # Skip case, clip will not have an effect on the output.
         emit_text_line(".\\\" OMIITED CLIP: " + clip_name[1:],
                        substitutions)
+
+    elif clip_name.startswith("#"):
+        m = re.match("(#+)(.*)", clip_name)
+        if m:
+            level = len(m[1])
+            text = m[2]
+            output_stream.write(f".NH {level}\n")
+            emit_text_line(text, substitutions)
+
+    elif clip_name.startswith("%"):
+        m = re.match("(%+)(.*)", clip_name)
+        if m:
+            level = len(m[1])
+            text = m[2]
+            output_stream.write(f".SH {level}\n")
+            emit_text_line(text, substitutions)
 
     elif clip_name.startswith("!"):
         # Literal case, clip text will be inserted literally into the document
@@ -109,7 +128,7 @@ def main(tc_format: str = "tc"):
     emit_groff_header(document.header.session_name)
 
     for track, track_clip, _, _, _ in document.track_clips_timed():
-        emit_clip_entry(track, track_clip)
+        emit_clip_entry(document.header, track, track_clip)
 
 
 if __name__ == "__main__":

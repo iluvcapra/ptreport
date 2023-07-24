@@ -24,13 +24,89 @@ Print clip start and finish in mins:secs format
 .IP "\-\-bars\-beats"
 Print clip start and finish in bars+beats format
 .SH DETAILED DESCRIPTION
-.I To be written
-.SS MOTIVATION
-.I To be written
-.SS THEORY OF OPERATION
-.I To be written 
-.SH TRACK AND CLIP NAME CODES
-.I To be written
+.\" .I To be written
+.\" .SS MOTIVATION
+.\" .I To be written
+.\" .SS THEORY OF OPERATION
+.\" .I To be written 
+
+.B ptreport 
+reads the selected tracks in the session currently open in Pro Tools and 
+creates
+.BR "groff" "(1)"
+typesetting instructions from the clip names. By default, the clips are read 
+from the session track by track, and then by time from beginning to the end
+of the session.
+
+For example, if you were to have a session with two tracks "Audio 1" and
+"Audio 2" selected, all of the clips on "Audio 1" would be read, in timeline 
+order and converted into typesetting, and then once all of the tracks on 
+"Audio 1" had been read, 
+.B ptreport 
+would go to the next track and then typeset each of the clips on "Audio 2" in 
+turn.
+
+At this time, a clip's muted status, or the show/hide or any other status of a 
+given track has any effect on the output.
+
+.SS CLIP NAME PREFIX CODES
+The first character in a clip name can determines how the text of the clip 
+is inserted into the output document.
+
+Unless otherwise indicated, all clip text is typeset after available 
+.I substitutions 
+have been applied (see 
+.B substitutions
+below.)
+.IP "-"
+The text of this clip will not be typeset. The text of the clip name will 
+instead be inserted as a comment into the document.
+.IP "#"
+The text of this clip will be typeset as a numbered header (with the
+.I ".NH"
+macro.) The number of hash symbols used indicates the heading level.
+.IP "%"
+The remaining text of this clip will be typeset as an un-numbered sub-section
+heading (with the 
+.I ".SH"
+macro.) The number of percent symbols used indicates the heading level.
+.IP "!"
+The remaining text of this clip will be inserted literally into the document, 
+followed by a newline.
+.IP ">"
+The remaining text of this clip will be typeset as a blockquote (i.e. wrapped 
+in 
+.IR ".QS" " and " ".QE" 
+macros.)
+.IP "/"
+the remaining text of this clip will be inserted as an indented paragraph, 
+under an line containing the clip's start and finish time aligned with the left 
+margin, creating a hanging indent. This typesetting is accomplished with the 
+.BR ptreport "-defined"
+.I ".eio"
+macro.
+.IP "[Any Other Character]"
+the 
+.B full 
+text (including the first character) of this clip will be inserted as an 
+indented paragraph, under an line containing the clip's start time aligned with 
+the left margin, creating a hanging indent. This typesetting is accomplished 
+with the 
+.BR ptreport "-defined"
+.I ".ei"
+macro.
+.SS SUBSTITUTIONS
+The following special text strings will be substituted in any clip name with 
+the corresponding value from the clip and track data.
+.IP $session 
+The name of the session.
+.IP $track
+The name of the track this clip is on.
+.IP $i
+The start text string.
+.IP $o
+The finish text string.
+.SS EXAMPLES
 .SH EXIT STATUS
 .IP 0
 Success.
