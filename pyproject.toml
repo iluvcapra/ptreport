@@ -8,7 +8,7 @@ authors = [
     {name = "Jamie Hardt", email = "jamiehardt@me.com"},
 ]
 readme = "README.md"
-# license = { file = "LICENSE" }
+license = { file = "LICENSE" }
 classifiers = [
     'License :: OSI Approved :: MIT License',
     'Topic :: Multimedia',
