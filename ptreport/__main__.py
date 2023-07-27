@@ -70,6 +70,11 @@ def emit_clip_entry(session: HeaderDescriptor,
                     output_stream=sys.stdout):
 
     clip_name = clip.clip_name
+
+    output_stream.write(f".ds start_time {clip.start_timecode}\n")
+    output_stream.write(f".ds finish_time {clip.finish_timecode}\n")
+    output_stream.write(f".ds track_name {track.name}\n")
+
     substitutions = {
         '$session': session.session_name,
         '$i': clip.start_timecode,
@@ -79,23 +84,31 @@ def emit_clip_entry(session: HeaderDescriptor,
     if clip_name.startswith("-"):
         # Skip case, clip will not have an effect on the output.
         emit_text_line(".\\\" OMIITED CLIP: " + clip_name[1:],
-                       substitutions)
+                       substitutions, output_stream=output_stream)
 
     elif clip_name.startswith("#"):
+        # Insert a numbered header
         m = re.match("(#+)(.*)", clip_name)
         if m:
             level = len(m[1])
             text = m[2]
             output_stream.write(f".NH {level}\n")
-            emit_text_line(text, substitutions)
+            emit_text_line(text, substitutions, output_stream=output_stream)
 
     elif clip_name.startswith("%"):
+        # Insert an un-numbered header
         m = re.match("(%+)(.*)", clip_name)
         if m:
             level = len(m[1])
             text = m[2]
             output_stream.write(f".SH {level}\n")
-            emit_text_line(text, substitutions)
+            emit_text_line(text, substitutions, output_stream=output_stream)
+    
+    elif clip_name.startswith("["):
+        # insert a non-indent paragraph
+        output_stream.write(".LP\n")
+        emit_text_line(clip_name[1:], substitutions, 
+                       output_stream=output_stream)
 
     elif clip_name.startswith("!"):
         # Literal case, clip text will be inserted literally into the document
