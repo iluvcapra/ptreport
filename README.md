@@ -10,17 +10,18 @@ need to export text from the session and allowing for enhanced data import.
 
 ## How to Use 
 
-Installing `ptreport` with `pip` will install a command-line tool that can be
+Installing `ptreport` with pip will install a command-line tool that can be
 invoked directly from a terminal. The tool will connect to Pro Tools with PTSL
-and emit `groff(1)` commands to the standard output. These can be immediately 
+and emit groff commands to the standard output. These can be immediately 
 piped to `groff(1)` for rendering to a device. 
 
 ```sh  
-$ ptreport | groff -ms -Tpdf > output.pdf
+$ ptreport | groff -K utf-8 -ms -Tpdf > output.pdf
 ```
 
-At this time, the markup emitted by `ptreport` uses the [`groff_ms(7)`][ms] 
-macro package.
+At this time, the markup emitted by `ptreport` uses the [groff "ms"][ms] 
+macro package. Pro Tools clip and track names are read as Unicode, thus the 
+`-K utf-8` option should be used.
 
 For more information consult `man ptreport`.
 
