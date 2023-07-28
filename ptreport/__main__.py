@@ -10,8 +10,8 @@ from grpc.aio import UsageError
 from grpc import StatusCode
 
 from ptulsconv.docparser import parse_document
-from ptulsconv.docparser.doc_entity import HeaderDescriptor, MarkerDescriptor, TrackDescriptor, \
-    TrackClipDescriptor, SessionDescriptor
+from ptulsconv.docparser.doc_entity import HeaderDescriptor, \
+    MarkerDescriptor, TrackDescriptor, TrackClipDescriptor, SessionDescriptor
 from ptsl import open_engine
 
 # from sys import stdout
@@ -33,25 +33,26 @@ def fetch_session_data(tc_format: str = "tc"):
 
 
 def emit_groff_header(session_name, output_stream=sys.stdout):
-    output_stream.write(f".TI {session_name}\n")
-    output_stream.write(""".de ei
-.XP
-.UL "\\\\$1"
-.br 
-\\\\$2
+    output_stream.write(f"""
+.eo
+.TI {session_name}
+.de ei 
+.   XP
+.   UL \\$1
+.   br 
+.   nop \\$2
 ..
-""")
-    output_stream.write(""".de eio 
-.XP
-.UL "\\\\$1 \\\\[->] \\\\$2"
-.br 
-\\\\$3
+.de eio 
+.   XP
+.   UL "\\$1 \\[->] \\$2"
+.   br 
+.   nop \\$3
 ..
+.nr PD 1v
+.nr PI 5n 
+.ta 10n 
+.ec
 """)
-    output_stream.write(f".nr PD 1v\n")
-    output_stream.write(f".nr PI 5n\n")
-    output_stream.write(".ta 10n\n")
-    # output_stream.write(f".SH 1\n.LG\n.LG\n{session_name}\n.NL\n")
 
 
 def emit_text_line(text: str,
@@ -107,6 +108,12 @@ def emit_clip_entry(session: HeaderDescriptor,
     elif clip_name.startswith("["):
         # insert a non-indent paragraph
         output_stream.write(".LP\n")
+        emit_text_line(clip_name[1:], substitutions, 
+                       output_stream=output_stream)
+
+    elif clip_name.startswith("]"):
+        # imsert an indented paragraph
+        output_stream.write(".PP\n")
         emit_text_line(clip_name[1:], substitutions, 
                        output_stream=output_stream)
 
