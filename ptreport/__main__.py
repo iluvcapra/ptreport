@@ -89,7 +89,7 @@ def emit_clip_entry(session: HeaderDescriptor,
 
     elif clip_name.startswith("#"):
         # Insert a numbered header
-        m = re.match("(#+)(.*)", clip_name)
+        m = re.match("^(#+)(.*)$", clip_name)
         if m:
             level = len(m[1])
             text = m[2]
@@ -98,7 +98,7 @@ def emit_clip_entry(session: HeaderDescriptor,
 
     elif clip_name.startswith("%"):
         # Insert an un-numbered header
-        m = re.match("(%+)(.*)", clip_name)
+        m = re.match("^(%+)(.*)$", clip_name)
         if m:
             level = len(m[1])
             text = m[2]
