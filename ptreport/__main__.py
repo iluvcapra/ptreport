@@ -1,7 +1,7 @@
 """
 main
 """
-from typing import Dict
+from typing import Callable, Dict, Iterable, Tuple
 import sys
 import optparse
 import re
@@ -10,7 +10,7 @@ from grpc.aio import UsageError
 from grpc import StatusCode
 
 from ptulsconv.docparser import parse_document
-from ptulsconv.docparser.doc_entity import HeaderDescriptor, \
+from ptulsconv.docparser.doc_entity import Fraction, HeaderDescriptor, \
     MarkerDescriptor, TrackDescriptor, TrackClipDescriptor, SessionDescriptor
 from ptsl import open_engine
 
@@ -141,14 +141,33 @@ def emit_clip_entry(session: HeaderDescriptor,
         output_stream.write(f".ei \"{clip.start_timecode}\" "
                             f"\"{clip_name}\" \n")
 
+def sort_time_track(
+        i: Iterable[Tuple[TrackDescriptor, TrackClipDescriptor, Fraction]]) -> \
+    Iterable[Tuple[TrackDescriptor, TrackClipDescriptor, Fraction]]:
+
+    return sorted(
+        sorted(i, 
+               key=lambda x : x[0].index),
+        key=lambda x: x[2]
+    )
+
 
 def main(tc_format: str = "tc"):
     document = fetch_session_data(tc_format=tc_format)
 
     emit_groff_header(document.header.session_name)
 
-    for track, track_clip, _, _, _ in document.track_clips_timed():
+    sort_mode = sort_time_track
+
+    for track, track_clip in map(lambda x: (x[0], x[1]), 
+                                 sort_mode(
+                                 map(lambda x: (x[0], x[1], x[2]),
+                                     document.track_clips_timed()
+                                     ))):
         emit_clip_entry(document.header, track, track_clip)
+
+    # for track, track_clip, _, _, _ in document.track_clips_timed():
+    #     emit_clip_entry(document.header, track, track_clip)
 
 
 if __name__ == "__main__":
