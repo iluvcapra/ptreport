@@ -89,6 +89,7 @@ def emit_clip_entry(session: HeaderDescriptor,
 
     elif clip_name.startswith("#"):
         # Insert a numbered header
+        # ".NH"
         m = re.match("^(#+)(.*)$", clip_name)
         if m:
             level = len(m[1])
@@ -98,6 +99,7 @@ def emit_clip_entry(session: HeaderDescriptor,
 
     elif clip_name.startswith("%"):
         # Insert an un-numbered header
+        # ".SH"
         m = re.match("^(%+)(.*)$", clip_name)
         if m:
             level = len(m[1])
@@ -107,8 +109,16 @@ def emit_clip_entry(session: HeaderDescriptor,
     
     elif clip_name.startswith("["):
         # insert a non-indent paragraph
+        # ".LP"
         output_stream.write(".LP\n")
         emit_text_line(clip_name[1:], substitutions, 
+                       output_stream=output_stream)
+    
+    elif clip_name.startswith("]"):
+        # insert an indented paragraph 
+        # ".PP"
+        output_stream.write(".PP\n")
+        emit_text_line(clip_name[1:], substitutions,
                        output_stream=output_stream)
 
     elif clip_name.startswith("]"):
@@ -119,11 +129,16 @@ def emit_clip_entry(session: HeaderDescriptor,
 
     elif clip_name.startswith("!"):
         # Literal case, clip text will be inserted literally into the document
-        emit_text_line(clip_name[1:], substitutions,
-                       output_stream=output_stream)
+        # Every subsquent exclamati0on point will br replaced with a newline.
+        # Use the groff \u0021 escape if you need to inseert an exclamation 
+        # point.
+        for line in clip_name[1:].split("!"):
+            emit_text_line(line, substitutions,
+                           output_stream=output_stream)
 
     elif clip_name.startswith(">"):
         # Insert the clip's text as a blockquote
+        # ".BQ .BE"
         output_stream.write(".QS\n")
         emit_text_line(clip_name[1:],
                        substitutions,
@@ -132,12 +147,14 @@ def emit_clip_entry(session: HeaderDescriptor,
 
     elif clip_name.startswith("/"):
         # Insert a formatted element with the clip's start and end time
+        # ".RANGE"
         output_stream.write(f".eio \"{clip.start_timecode}\" "
                             f"\"{clip.finish_timecode}\" "
                             f"\"{clip.clip_name[1:]}\"")
 
     else:
         # By default, insert a formatted element with the clip's start time
+        # ".TIME"
         output_stream.write(f".ei \"{clip.start_timecode}\" "
                             f"\"{clip_name}\" \n")
 
