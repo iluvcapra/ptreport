@@ -26,7 +26,7 @@ keywords = ["text-processing", "parsers", "film",
     "broadcast", "editing", "editorial"]
 dependencies = [
   'py-ptsl ~= 101.1.0',
-  'ptulsconv ~= 2.1.0',
+  'ptulsconv >= 2.1.0',
   'grpcio ~= 1.56.2'
 ]
 

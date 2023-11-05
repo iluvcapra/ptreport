@@ -1,21 +1,20 @@
 """
 main
 """
-from typing import Callable, Dict, Iterable, Tuple
+from typing import Dict, Iterable, Tuple
 import sys
 import optparse
 import re
 
 from grpc.aio import UsageError
-from grpc import StatusCode
+# from grpc import StatusCode
 
 from ptulsconv.docparser import parse_document
 from ptulsconv.docparser.doc_entity import Fraction, HeaderDescriptor, \
-    MarkerDescriptor, TrackDescriptor, TrackClipDescriptor, SessionDescriptor
+        TrackDescriptor, TrackClipDescriptor
 from ptsl import open_engine
 
 # from sys import stdout
-
 
 def fetch_session_data(tc_format: str = "tc"):
     with open_engine(company_name="ptreport developers",
