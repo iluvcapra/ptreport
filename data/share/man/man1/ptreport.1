@@ -59,36 +59,35 @@ have been applied (see
 .B substitutions
 below.)
 .IP "-"
-The text of this clip will not be typeset. The text of the clip name will 
-instead be inserted as a comment into the document.
+The text of this clip will be sent to the typesetter as a comment.
 .IP "#"
-The text of this clip will be typeset as a numbered header (with the
-.I ".NH"
-macro.) The number of hash symbols used indicates the heading level.
+The text of this clip will be typeset as a numbered header. The number of hash 
+symbols used indicates the heading level and is clamped to five.
 .IP "%"
 The remaining text of this clip will be typeset as an un-numbered sub-section
-heading (with the 
-.I ".SH"
-macro.) The number of percent symbols used indicates the heading level.
+heading. The number of percent symbols used indicates the heading level and is
+clamped to five.
 .IP "["
-The text of this paragraph will be typeset as an un-indented paragraph with the
-.I ".LP"
-macro.
+The text of this paragraph will be typeset as an un-indented paragraph.
 .IP "]"
-The text of this paragraph will be typeset as an un-indented paragraph with the
-.I ".PP"
-macro.
+The text of this paragraph will be typeset as an indented paragraph.
+.IP "*"
+The remaining text of this clip will be typset as a bulleted, indented
+paragraph.
 .IP "!"
-The remaining text of this clip will be inserted literally into the document, 
-followed by a newline.
+The remaining text of this clip will be sent directly to the typesetter. This 
+can be used to send requests, set registers or invoke macros on the typesetter;
+it's also the way to append text to the previous clip. Every subsequent "!" in 
+the clip name will be replaced with a newline in the typesetter stream.
+.\" .EE
+.\" !.nr PD 4n 
+.\" .I (Sets the paragraph spacing to 4n.)
+.\" .EX
 .IP ">"
-The remaining text of this clip will be typeset as a blockquote (i.e. wrapped 
-in 
-.IR ".QS" " and " ".QE" 
-macros.)
+The remaining text of this clip will be typeset as a blockquote. 
 .IP "/"
 the remaining text of this clip will be inserted as an indented paragraph, 
-under an line containing the clip's start and finish time aligned with the left 
+under a line containing the clip's start and finish time aligned with the left 
 margin, creating a hanging indent. This typesetting is accomplished with the 
 .BR ptreport "-defined"
 .I ".eio"
@@ -97,7 +96,7 @@ macro.
 the 
 .B full 
 text (including the first character) of this clip will be inserted as an 
-indented paragraph, under an line containing the clip's start time aligned with 
+indented paragraph, under a line containing the clip's start time aligned with 
 the left margin, creating a hanging indent. This typesetting is accomplished 
 with the 
 .BR ptreport "-defined"
@@ -114,7 +113,17 @@ The name of the track this clip is on.
 The start text string.
 .IP $o
 The finish text string.
-.SS EXAMPLES
+.SS TEXT ENCODING
+Text is acquired from Pro Tools as UTF-8. In order to display these characters 
+correctly in the 
+.I troff 
+typsetter thse must be convrted to the appropriate escapes or interploations 
+with either 
+.BR preconv "(1)"
+or by using GNU 
+.BR groff "(1)'s" " -K"
+option.
+.\" .SS EXAMPLES
 .SH EXIT STATUS
 .IP 0
 Success.

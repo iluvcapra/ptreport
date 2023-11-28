@@ -1,7 +1,7 @@
 """
 main
 """
-from typing import Dict, Iterable, Tuple
+from typing import Dict, Iterable, Tuple, List
 import sys
 import optparse
 import re
@@ -35,17 +35,15 @@ def emit_groff_header(session_name, output_stream=sys.stdout):
     output_stream.write(f"""
 .eo
 .TI {session_name}
-.de ei 
+.de MARK 
 .   XP
 .   UL \\$1
 .   br 
-.   nop \\$2
 ..
-.de eio 
+.de RANGE 
 .   XP
 .   UL "\\$1 \\[->] \\$2"
 .   br 
-.   nop \\$3
 ..
 .nr PD 1v
 .nr PI 5n 
@@ -54,8 +52,7 @@ def emit_groff_header(session_name, output_stream=sys.stdout):
 """)
 
 
-def emit_text_line(text: str,
-                   substitutions: Dict[str, str] = {},
+def emit_text_line(text: str, substitutions: Dict[str, str] = {},
                    output_stream=sys.stdout):
 
     for k in substitutions.keys():
@@ -64,10 +61,8 @@ def emit_text_line(text: str,
     output_stream.write(text.strip(" ") + "\n")
 
 
-def emit_clip_entry(session: HeaderDescriptor,
-                    track: TrackDescriptor,
-                    clip: TrackClipDescriptor,
-                    output_stream=sys.stdout):
+def emit_clip_entry(session: HeaderDescriptor, track: TrackDescriptor,
+                    clip: TrackClipDescriptor, output_stream=sys.stdout):
 
     clip_name = clip.clip_name
 
@@ -91,7 +86,7 @@ def emit_clip_entry(session: HeaderDescriptor,
         # ".NH"
         m = re.match("^(#+)(.*)$", clip_name)
         if m:
-            level = len(m[1])
+            level = min(len(m[1]), 5)
             text = m[2]
             output_stream.write(f".NH {level}\n")
             emit_text_line(text, substitutions, output_stream=output_stream)
@@ -101,7 +96,7 @@ def emit_clip_entry(session: HeaderDescriptor,
         # ".SH"
         m = re.match("^(%+)(.*)$", clip_name)
         if m:
-            level = len(m[1])
+            level = min(len(m[1]), 5)
             text = m[2]
             output_stream.write(f".SH {level}\n")
             emit_text_line(text, substitutions, output_stream=output_stream)
@@ -120,15 +115,15 @@ def emit_clip_entry(session: HeaderDescriptor,
         emit_text_line(clip_name[1:], substitutions,
                        output_stream=output_stream)
 
-    elif clip_name.startswith("]"):
-        # imsert an indented paragraph
-        output_stream.write(".PP\n")
+    elif clip_name.startswith("*"):
+        # insert a bulleted paragraph
+        output_stream.write(".IP \\[bu]\n")
         emit_text_line(clip_name[1:], substitutions, 
                        output_stream=output_stream)
 
     elif clip_name.startswith("!"):
         # Literal case, clip text will be inserted literally into the document
-        # Every subsquent exclamati0on point will br replaced with a newline.
+        # Every subsquent exclamati0on point will be replaced with a newline.
         # Use the groff \u0021 escape if you need to inseert an exclamation 
         # point.
         for line in clip_name[1:].split("!"):
@@ -147,19 +142,19 @@ def emit_clip_entry(session: HeaderDescriptor,
     elif clip_name.startswith("/"):
         # Insert a formatted element with the clip's start and end time
         # ".RANGE"
-        output_stream.write(f".eio \"{clip.start_timecode}\" "
-                            f"\"{clip.finish_timecode}\" "
+        output_stream.write(f".RANGE \"{clip.start_timecode}\" "
+                            f"\"{clip.finish_timecode}\"\n"
                             f"\"{clip.clip_name[1:]}\"")
 
     else:
         # By default, insert a formatted element with the clip's start time
-        # ".TIME"
-        output_stream.write(f".ei \"{clip.start_timecode}\" "
+        output_stream.write(f".MARK \"{clip.start_timecode}\"\n"
                             f"\"{clip_name}\" \n")
 
 def sort_time_track(
-        i: Iterable[Tuple[TrackDescriptor, TrackClipDescriptor, Fraction]]) -> \
-    Iterable[Tuple[TrackDescriptor, TrackClipDescriptor, Fraction]]:
+        i: Iterable[Tuple[TrackDescriptor, 
+                          TrackClipDescriptor, Fraction]]) -> \
+    List[Tuple[TrackDescriptor, TrackClipDescriptor, Fraction]]:
 
     return sorted(
         sorted(i, 
@@ -168,7 +163,7 @@ def sort_time_track(
     )
 
 
-def main(tc_format: str = "tc"):
+def typeset(tc_format: str = "tc"):
     document = fetch_session_data(tc_format=tc_format)
 
     emit_groff_header(document.header.session_name)
@@ -214,6 +209,6 @@ if __name__ == "__main__":
     (options, args) = opts.parse_args()
 
     try:
-        main(tc_format=options.tc_format)
+        typeset(tc_format=options.tc_format)
     except UsageError as e:
         sys.exit(2)
